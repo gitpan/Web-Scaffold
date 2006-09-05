@@ -3,7 +3,7 @@ package Web::Scaffold;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.02 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.03 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -266,7 +266,7 @@ sub menugen {
     } else {
       $bar = 1;
     }
-    my $class = ($name eq $page || $name eq $debug)
+    my $class = ($name eq $page)
 	? 'CP' : 'NU';
     $html .= qq|  <td><a class="$class" |;
     if (exists $pp->{$name} &&
