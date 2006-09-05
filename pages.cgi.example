@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # pages.cgi.example
-# version 1.00, 8-30-06, michael@bizsystems.com
+# version 1.01, 9-4-06, michael@bizsystems.com
 #
 use Web::Scaffold;
 
@@ -92,8 +92,8 @@ my $menu = [qw(
 	Page-Source
 	manpage
 )];
-
 my $copyright = 'Copyright 2006, Michael@bizsystems.com';
+my $top = '|#top|TOP|TOP of page';
 
 %pages = (
 
@@ -131,7 +131,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    column	=> ['50%', '50%'],
 	    submenu	=> ['Structure'],
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> [$top,'Home'],
 		text	=> $copyright,
 	    },
 	},
@@ -141,7 +141,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    heading	=> '&nbsp;&nbsp;Site schema and page structure',
 	    column	=> ['50%', '50%'],
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> [$top, 'Home'],
 		text	=> $copyright,
 	    },
 	},
@@ -153,7 +153,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    column	=> [qw( 20 600)],
 	    submenu	=> [qw(Default.meta Default.top Home.meta Home.c2 Home.c3 pages.cgi scaffold.js winMenus.js winUtils.js)],
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> [$top, 'Home'],
 		text	=> $copyright,
 	    },
 	},
@@ -161,7 +161,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    menu	=> $menu,
 	    heading	=> 'Web::Scaffold manpage',
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> [$top, 'Home'],
 		text	=> $copyright,
 	    },
 	},
@@ -170,7 +170,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    heading	=> 'Typical specification hash: %specs, (from POD)',
 	    column	=> [20, 600],
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> ['|#top|TOP|TOP of page','Home'],
 		text	=> $copyright,
 	    },
 	},
@@ -179,7 +179,7 @@ my $copyright = 'Copyright 2006, Michael@bizsystems.com';
 	    heading	=> 'Typical specification hash: %pages, (from POD)',
 	    column	=> [20, 600],
 	    trailer	=> {
-		links	=> ['Home'],
+		links	=> [$top,'Home'],
 		text	=> $copyright,
 	    },
 	},

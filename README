@@ -123,16 +123,17 @@ CONFIGURATION
           Home.head             # optional additional <head> text
           Home.top              # body text that appears before
                                 # menu-bar. i.e. logo, etc...
-          Home.c1               # column 1 content
-          Home.c2               # column 2 content
-          Home.cn               # column 'n' content
+          Home.c1               # [optional] column 1 content
+          Home.c2               # [optional] column 2 content
+          Home.cn               # [optional] column 'n' content
 
           %pages = (
 
           # REQUIRED page
           #
                 Home    => {
-                    menu        => [qw(Home Page1 Page2 Page5)],
+          #                     SEE: detailed link format below
+                    menu        => ['Home', 'Page1', 'Page2', 'Page5'],
           # optional title text - if missing, 'heading' text will be used
                     title       => 'page title',
 
@@ -187,22 +188,52 @@ OPERATION
     take advantage of the MouseOver and STATUS reporting features of
     Web::Scaffold, may be specified using the special syntax:
 
+  Menu and Trailer link format
+
+    There are two acceptable formats for links used in the MENU and TRAILER
+    sections of a page specification:
+
+    1 PageName
+        This is simply the key to the %pages array and its value will be
+        used as the text for the LINK and the display value in the browser
+        STATUS bar.
+
+    2 {separator}key or URL{separator}link text{separator}status text
+        This syntax allows for either a PageName as above or a file/http URL
+        value to be used as the link target. The separator may be any
+        printable ASCII character except {}. The "link text" and "status
+        text" values are optional. "link text" will be filled from the
+        key/URL value if it is not present. "status text" will be filled
+        from the link text or from the key/URL value if link text is not
+        present.
+
+          Example:
+            #http://my.website.com#visit my website#MY WEBSITE#
+
+        Note that an optional separator character may terminate the link
+        string.
+
+  Embedded Links Within Page Text
+
+    The syntax for embedded page links is similar to above with the addition
+    of a keyword and enclosing brackets.
+
       LINK<#page_name#optional link text#optional status text#>
     or
       LINK<#URL#optional link text#optional status text#>
 
-    URL syntax is as follows:
+    Exact syntax is as follows:
 
       uppercase word        "LINK"
       less than symbol      <
       delimiter (any char)  #
       page name or url text ./dir/file or http://....
-        [optional]
+        [optional] link and status fields
       delimiter             #
       link text             optional text for link
       delimiter             #
       status bar text       optional browser status bar text
-      delimiter             #
+      delimiter             # [optional] closing delimiter
          required
       greater than symbol   >
 
@@ -216,6 +247,25 @@ OPERATION
     include files (page.head, page.top, page.c1, page.c2, etc...) to produce
     a website that can be easily and quickly maintained by simply editing
     the page includes.
+
+    Each web page assembled by Web::Scaffold as follows:
+
+      <html>
+      <head>
+      <title> [from page title or heading] </title>
+      [optional] Default.meg\ta or Page.meta
+      internally generated style statements
+      [optional] Default.head or Page.head
+      </head>
+      <body>
+      [optional] Default.top or Page.top
+      [optional] menu bar as specified for this Page
+      internally generated column specification for this Page
+      {    column 1    }{    column 2    }......{    column N    }
+       Page.c1 or blank  Page.c2 or blank .etc.. Page.cN or blank
+      [optional] trailer
+      </body>
+      </html>
 
 AUTHOR
     Michael Robinton <michael@bizsystems.com>

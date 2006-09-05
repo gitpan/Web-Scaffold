@@ -3,7 +3,7 @@ package Web::Scaffold;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.01 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.02 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -205,11 +205,36 @@ sub get_cols {
   return $cols;
 }
 
+# generate values for 'name', 'href', 'onClick', 'link text', and 'status text'
+#
+# input:	pointer to page hash,
+#		item
+# returns:	name, href, click, link text, status text
+#
+sub menuitem {
+  my($pp,$item) = @_;
+  return ($item, '#',
+	  qq|onClick="return(npg('$item'));"|,
+	  $item, $item
+	) if exists $pp->{$item};
+  $item =~ m{(.)(.+)};	# skim off the first character
+  my $s = quotemeta $1;	# the seperator character
+  my($name,$text,$status) = split(m{$s},$2);
+  $text = $name unless $text;
+  $status = $text unless $status;
+  return ($name, '#',
+	  qq|onClick="return(npg('$name'));"|,
+	  $text, $status
+	) if exists $pp->{$name};
+  return ($name, $name,'',$text,$status);
+}
+
 # generate menu bar
 #
 # input:	pointer to page hash,
 #		page name
 #		page width
+#		debug page name
 # return:	html for menu,
 #		div html for dropdowns
 #
@@ -220,7 +245,7 @@ sub get_cols {
 # etc...
 #
 sub menugen {
-  my($pp,$page,$pw) = @_;
+  my($pp,$page,$pw,$debug) = @_;
   my @selectbar;
   return ('&nbsp;','') unless
 	exists $pp->{$page}->{menu} &&
@@ -235,28 +260,35 @@ sub menugen {
   $html .= "<td>&nbsp;</td>\n";
   my $bar = 0;
   foreach(@selectbar) {
+    my($name,$href,$click,$text,$status) = menuitem($pp,$_);
     if ($bar) {
       $html .= q#<td class="S">|</td>#;
     } else {
       $bar = 1;
     }
-    my $class = $_ eq $page ? 'CP' : 'NU';
+    my $class = ($name eq $page || $name eq $debug)
+	? 'CP' : 'NU';
     $html .= qq|  <td><a class="$class" |;
-    if (exists $pp->{$_}->{submenu} && @{$pp->{$_}->{submenu}}) {	# build menu links
-      $html .= qq|id="L${linkCount}" href="#" onMouseout="return(headOut());" onMouseover="return(headOver('$_',$linkCount));" onClick="return(npg('$_'));">$_</a></td>
+    if (exists $pp->{$name} &&
+	exists $pp->{$name}->{submenu} &&
+	@{$pp->{$name}->{submenu}}) {	# build menu links
+      $html .= qq|id="L${linkCount}" href="$href" onMouseout="return(headOut());" onMouseover="return(headOver('$status',$linkCount));" $click>$text</a></td>
 |;
       $div .= qq|<div id="menu${linkCount}" class="dropdown">
 |;
-      foreach my $sublink (@{$pp->{$_}->{submenu}}) {
-        $class = $sublink eq $page ? 'CP' : 'NU';
-        $div .= qq|<a class="$class" href="./" onMouseout="return(linkOut());" onMouseover="return(linkOver('$sublink'));" onClick="return(linkClick('$sublink'));">$sublink</a><br>
+      foreach my $sublink (@{$pp->{$name}->{submenu}}) {
+        ($name,$href,$click,$text,$status) = menuitem($pp,$sublink);
+	$click = qq|onClick="return(linkClick('$name'));"| if $click;	# fix up click return
+	$class = ($name eq $page || $name eq $debug)
+		? 'CP' : 'NU';
+        $div .= qq|<a class="$class" href="$href" onMouseout="return(linkOut());" onMouseover="return(linkOver('$status'));" $click>$text</a><br>
 |;
       }
       $div .= q|</div>
 |;
       ++$linkCount;
     } else {
-      $html .= qq|href="./" onMouseover="return(oneOver('$_'));" onMouseout="return(linkOut());" onClick="return(npg('$_'));">$_</a></td>
+      $html .= qq|href="$href" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
 |;
     }
   }  
@@ -286,14 +318,15 @@ sub trailgen {
 |;
     my $bar = 0;
     foreach(@selectbar) {
+      my($name,$href,$click,$text,$status) = menuitem($pp,$_);
       if ($bar) {
         $html .= q#<td class='S'>|</td>#;
       } else {
         $bar = 1;
       }
-      my $class = $_ eq $page ? 'CP' : 'NU';
-      $html .= qq|  <td><a class=$class |;
-      $html .= qq|href='./' onMouseover="return(oneOver('$_'));" onMouseout="return(linkOut());" onClick="return(npg('$_'));">$_</a></td>
+      my $class = $name eq $page ? 'CP' : 'NU';
+      $html .= qq|  <td><a class="$class" |;
+      $html .= qq|href="$href" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
 |;
     }
   }
@@ -318,9 +351,10 @@ sub trailgen {
 #
 sub fixLINKs {
   my($pp,$html) = @_;
-  while ($html =~ /LINK\<(.)([^>]+)>/) {
-    my $match = $&;
-    my($page,$link,$status) = split(/$1/,$2);
+  while ($html =~ m{LINK\<(.)([^>]+)>}) {
+    my $match = quotemeta $&;
+    my $s = quotemeta $1;
+    my($page,$link,$status) = split(m{$s},$2);
     $link = $page unless $link;
     $status = $link unless $status;
     my $replacement = q|<a class="B" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
@@ -568,7 +602,7 @@ all the features on this page</font>
   if (	exists $pp->{$page}->{menu} &&
 	ref $pp->{$page}->{menu} eq 'ARRAY' &&
 	@{$pp->{$page}->{menu}} ) {
-    (my $mnutxt,$divtxt) = menugen($pp,$page,$specs->{pagewidth});
+    (my $mnutxt,$divtxt) = menugen($pp,$page,$specs->{pagewidth},$debug);
     $html .= q|<tr><td>|. $mnutxt . q|</td></tr>
 <tr><td>|;
   }
@@ -725,16 +759,17 @@ required page 'Home', they are as follows:
   Home.head		# optional additional <head> text
   Home.top		# body text that appears before
 			# menu-bar. i.e. logo, etc...
-  Home.c1		# column 1 content
-  Home.c2		# column 2 content
-  Home.cn		# column 'n' content
+  Home.c1		# [optional] column 1 content
+  Home.c2		# [optional] column 2 content
+  Home.cn		# [optional] column 'n' content
 
   %pages = (
 
   # REQUIRED page
   #
 	Home	=> {
-	    menu	=> [qw(Home Page1 Page2 Page5)],
+  #			SEE: detailed link format below
+	    menu	=> ['Home', 'Page1', 'Page2', 'Page5'],
   # optional title text - if missing, 'heading' text will be used
 	    title	=> 'page title',
 
@@ -792,22 +827,55 @@ formating. LINKS WITHIN THE PAGE may be regular html or to take advantage
 of the MouseOver and STATUS reporting features of Web::Scaffold, may be 
 specified using the special syntax:
 
+=head2 Menu and Trailer link format
+
+There are two acceptable formats for links used in the MENU and TRAILER
+sections of a page specification:
+
+=over 4
+
+=item 1 PageName
+
+This is simply the key to the %pages array and its value will be used as the
+text for the LINK and the display value in the browser STATUS bar.
+
+=item 2 {separator}key or URL{separator}link text{separator}status text
+
+This syntax allows for either a PageName as above or a file/http URL value
+to be used as the link target. The separator may be any printable ASCII
+character except B<{}>. The C<link text> and C<status text> values are
+optional. C<link text> will be filled from the key/URL value if it is not
+present. C<status text> will be filled from the link text or from the
+key/URL value if link text is not present.
+
+  Example:
+    #http://my.website.com#visit my website#MY WEBSITE#
+
+Note that an optional separator character may terminate the link string.
+
+=back
+
+=head2 Embedded Links Within Page Text
+
+The syntax for embedded page links is similar to above with the addition of
+a keyword and enclosing brackets.
+
   LINK<#page_name#optional link text#optional status text#>
 or
   LINK<#URL#optional link text#optional status text#>
 
-URL syntax is as follows:
+Exact syntax is as follows:
 
   uppercase word	"LINK"
   less than symbol	<
   delimiter (any char)	#
   page name or url text	./dir/file or http://....
-    [optional]
+    [optional] link and status fields
   delimiter		#
   link text		optional text for link
   delimiter		#
   status bar text	optional browser status bar text
-  delimiter		#
+  delimiter		# [optional] closing delimiter
      required
   greater than symbol	>
 

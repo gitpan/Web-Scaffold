@@ -2,7 +2,7 @@
 #
 # item_extract
 #
-# version 1.00
+# version 1.01, 9-4-06, michael@bizsystems.com
 #
 # script to extract an "item" from an htmlized POD doc
 #
@@ -19,8 +19,8 @@ open(F,$pod);
 my $txt;
 my $on = 0;
 while(<F>) {
-  if ($_ =~ /a name/i) {
-    if ($_ =~ /a name.+item.*${item}/i) {
+  if ($_ =~ /<a name/i) {
+    if ($_ =~ /<a name.+item.*${item}/i) {
       $txt = $_;
       $on = 1;
     } else {
