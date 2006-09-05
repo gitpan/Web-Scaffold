@@ -3,7 +3,7 @@ package Web::Scaffold;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.03 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.04 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -663,6 +663,12 @@ The index pages requires Server Side Includes (SSI) and is as follows:
 
 Alternatively, you can use the included B<pages.cgi> script as an example to
 build your own more sophisticated cgi or mod_perl application.
+
+An illustrated sample web site can be viewed here:
+
+=head1 SAMPLE WEBSITE
+
+=head2 L<http://www.bizsystems.net/downloads/webscaffold/>
 
 =head1 CONFIGURATION
 

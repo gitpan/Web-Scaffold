@@ -1,5 +1,8 @@
 Revision history for Perl extension Web::Scaffold
 
+0.04  Tue Sep  5 13:54:46 PDT 2006
+	add link to example web site to POD
+
 0.03  Tue Sep  5 11:58:41 PDT 2006
 	correct behavior of mouseOver for debug links
 

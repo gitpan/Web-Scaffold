@@ -33,6 +33,11 @@ DESCRIPTION
     Alternatively, you can use the included pages.cgi script as an example
     to build your own more sophisticated cgi or mod_perl application.
 
+    An illustrated sample web site can be viewed here:
+
+SAMPLE WEBSITE
+  http://www.bizsystems.net/downloads/webscaffold/
+
 CONFIGURATION
   build(%specs,%pages)
 
