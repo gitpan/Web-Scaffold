@@ -43,7 +43,7 @@ foreach my $dir (qw(tmp)) {
 }
 
 my $dir = './tmp';
-mkdir $dir;
+mkdir $dir,0755;
 
 sub next_sec {
   my ($then) = @_;

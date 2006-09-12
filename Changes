@@ -1,5 +1,8 @@
 Revision history for Perl extension Web::Scaffold
 
+0.05  Mon Sep 11 18:54:05 PDT 2006
+	'mkdir' updates for compatability with perl 5.0503
+
 0.04  Tue Sep  5 13:54:46 PDT 2006
 	add link to example web site to POD
 

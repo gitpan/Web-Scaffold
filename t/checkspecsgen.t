@@ -46,7 +46,7 @@ foreach my $dir (qw(tmp)) {
 }
 
 my $dir = './tmp';
-mkdir $dir;
+mkdir $dir,0755;
 } # if 0
 
 sub next_sec {
