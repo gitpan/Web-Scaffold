@@ -1,5 +1,9 @@
 Revision history for Perl extension Web::Scaffold
 
+0.06  Sat Nov  4 10:58:48 PST 2006
+	fixed bug in 'get_col' that prevented 'link' syntax from
+	working in a menu bar
+
 0.05  Mon Sep 11 18:54:05 PDT 2006
 	'mkdir' updates for compatability with perl 5.0503
 

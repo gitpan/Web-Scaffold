@@ -3,7 +3,7 @@ package Web::Scaffold;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.05 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.06 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -200,7 +200,7 @@ sub get_cols {
 # check for sub-menu's on menu items
   foreach (@{$pp->{$page}->{menu}}) {
 #	count if there are sub menu's
-    ++$cols if exists $pp->{$_}->{submenu} && @{$pp->{$_}->{submenu}};
+    ++$cols if exists $pp->{$_} && exists $pp->{$_}->{submenu} && @{$pp->{$_}->{submenu}};
   }
   return $cols;
 }
@@ -248,7 +248,7 @@ sub menugen {
   my($pp,$page,$pw,$debug) = @_;
   my @selectbar;
   return ('&nbsp;','') unless
-	exists $pp->{$page}->{menu} &&
+	exists $pp->{$page} && exists $pp->{$page}->{menu} &&
 	(@selectbar = @{$pp->{$page}->{menu}});
   my $linkCount = 1;
   my $div = '';
