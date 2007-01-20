@@ -3,7 +3,7 @@ package Web::Scaffold;
 use strict;
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.06 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.07 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -611,7 +611,7 @@ all the features on this page</font>
   } else {
     $html .= bodygen($pp,$page,$specs->{pagewidth},$pagedir);
   }
-  $html .= "\n". $divtxt .q|
+  $html .= "\n". $divtxt .q|<font size=1>&nbsp;<p></font>
 </td></tr>
 |;
   if (	exists $pp->{$page}->{trailer} &&

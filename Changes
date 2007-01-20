@@ -1,5 +1,8 @@
 Revision history for Perl extension Web::Scaffold
 
+0.07  Sat Jan 20 14:41:24 PST 2007
+	format page to add a little space after page body before trailer
+
 0.06  Sat Nov  4 10:58:48 PST 2006
 	fixed bug in 'get_col' that prevented 'link' syntax from
 	working in a menu bar
