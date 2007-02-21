@@ -1,15 +1,63 @@
 #!/usr/bin/perl
 #
 # pages.cgi.example
-# version 1.01, 9-4-06, michael@bizsystems.com
+# version 1.02, 2-19-07, michael@bizsystems.com
 #
 use Web::Scaffold;
 
 %specs = (
 
-# directory path for 'html pages', defaults to:
+# directory path for 'html pages' relative to the html root
+# i.e. public_html/        defaults to:
 #
 	pagedir		=> '../pages',
+
+# directory path for 'javascript libraries' relative to html root
+# defaults to:
+
+	javascript	=> 'lib',
+
+# no search conditions for building the site map. Each
+# element is evaluated as a perl match condition in the
+# context of m/element/. Include page names, extensions, etc...
+#
+# [OPTIONAL]
+#
+
+	nosearch	=>[ 'pdf' ],
+
+# Directory path for 'sitemap' page generation relative to the 
+# html root. This directory must be WRITABLE by the web server.
+#
+# NOTE: link the file 'sitemapdir'/sitemaplxml to the 
+# appropriate location in your web directory.
+# 
+# The sitemap.xml file will be generated and updated ONLY if 
+# the 'sitemapdir' key is present in this configuration file.
+#
+# The sitemap page will auto update if you modify pages in
+# 'pagedir' or in the 'autocheck' list below. If you modify 
+# static pages elsewhere in the web directory tree that are
+# not listed in 'autocheck', you must DELETE the sitemap.xml 
+# file to force an update.
+#
+# [OPTIONAL]
+#
+	sitemapdir	=> '../ws_sitemap',
+
+# Directories to autocheck for sitemap update.
+# you can list BOTH directories and individual files
+# here relative to the web root. The 'sitemapdir' and
+# 'pagedir' are always checked and do not need to be
+# listed here.
+#
+	autocheck	=> ['docs'],
+
+# site map <changefreq> hint
+#
+# defaults to:
+#
+	changefreq	=> 'monthly',
 
 # font family used throughout the document
 #
@@ -22,32 +70,32 @@ use Web::Scaffold;
 
 # Menu specifications
 #
-	barcolor	=> '#0000CC',
+	barcolor	=> 'red',
 	menudrop	=> '55',	# drop down position
 	menuwidth	=> '100px',	# width of menu item
 	pagewidth	=> '620px',	# recommended
-# meNU font specifications - class='NU'
-	menucolor	=> 'gold',
-	menuhot		=> 'red',	# mouse over
+# menu font specifications
+	menucolor	=> 'black',
+	menuhot		=> 'yellow',	# mouse over
 	menucold	=> 'white',	# page selected
-	menustyle	=> 'bold',	# bold, italic
+	menustyle	=> 'normal',	# bold, italic
 	menusize	=> '13px',	# font points or pixels
-	sepcolor	=> 'gold',	# separator color
+	sepcolor	=> 'black',	# separator color
 
-# Basic link font specifications - class='B'
+# Page link font specifications
 #
 	linkcolor	=> 'blue',
 	linkhot		=> 'green',
 	linkstyle	=> 'normal',	# bold, italic
 	linksize	=> '13px',	# font points or pixels
 
-# Page Text font specifications - class='PT'
+# Page Text font specifications
 #
  	fontcolor	=> 'black',
 	fontstyle	=> 'normal',
 	fontsize	=> '13px',
 
-# Heading Text specifications - class='HT'
+# Heading font specifications
 #
 	headcolor	=> 'black',
 	headstyle	=> 'bold',	# normal, italic
@@ -91,8 +139,11 @@ my $menu = [qw(
 	Schema
 	Page-Source
 	manpage
+	Sitemap
 )];
-my $copyright = 'Copyright 2006, Michael@bizsystems.com';
+
+my $now = (localtime())[5] + 1900;
+my $copyright = 'Copyright 2006 - '. $now .', Michael@bizsystems.com';
 my $top = '|#top|TOP|TOP of page';
 
 %pages = (
@@ -152,6 +203,16 @@ my $top = '|#top|TOP|TOP of page';
 	    heading	=> '&nbsp;&nbsp;&nbsp;&nbsp;View the Page Source text',
 	    column	=> [qw( 20 600)],
 	    submenu	=> [qw(Default.meta Default.top Home.meta Home.c2 Home.c3 pages.cgi scaffold.js winMenus.js winUtils.js)],
+	    trailer	=> {
+		links	=> [$top, 'Home'],
+		text	=> $copyright,
+	    },
+	},
+	Sitemap		=> {
+	    menu	=> $menu,
+	    title	=> 'Sitemap',
+	    autocol	=> 2,
+	    column	=> [qw( 20 600)],
 	    trailer	=> {
 		links	=> [$top, 'Home'],
 		text	=> $copyright,

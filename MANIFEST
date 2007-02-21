@@ -20,6 +20,7 @@ example_website/public_html/lib/scaffold.js
 example_website/public_html/lib/winUtils.js
 example_website/public_html/lib/winMenus.js
 example_website/public_html/pages.cgi
+example_website/ws_sitemap/.empty
 index.shtml.example
 item_extract
 javascript/scaffold.js

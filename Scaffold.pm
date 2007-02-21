@@ -1,9 +1,12 @@
 package Web::Scaffold;
 
+#use diagnostics;
 use strict;
+use POSIX;
+use Fcntl qw(:flock);
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.07 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.09 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -16,6 +19,48 @@ my @defaults = (
 # defaults to:
 
 	javascript	=> 'lib',
+
+# no search conditions for building the site map. Each
+# element is evaluated as a perl match condition in the
+# context of m/element/. Include page names, extensions, etc...
+#
+# [OPTIONAL]
+#
+
+	nosearch	=> [ 'pdf' ],
+
+# Directory path for 'sitemap' page generation relative to the 
+# html root. This directory must be WRITABLE by the web server.
+#
+# NOTE: link the file 'sitemapdir'/sitemaplxml to the 
+# appropriate location in your web directory.
+# 
+# The sitemap.xml file will be generated and updated ONLY if 
+# the 'sitemapdir' key is present in this configuration file.
+#
+# The sitemap page will auto update if you modify pages in
+# 'pagedir' or in the 'autocheck' list below. If you modify 
+# static pages elsewhere in the web directory tree that are
+# not listed in 'autocheck', you must DELETE the sitemap.xml 
+# file to force an update.
+#
+# [OPTIONAL]
+#
+#	sitemapdir	=> '../ws_sitemap',
+
+# Directories to autocheck for sitemap update.
+# you can list BOTH directories and individual files
+# here relative to the web root. The 'sitemapdir' and
+# 'pagedir' are always checked and do not need to be
+# listed here.
+#
+#	autocheck	=> ['docs'],
+
+# site map <changefreq> hint
+#
+# defaults to:
+#
+	changefreq	=> 'monthly',
 
 # font family used throughout the document
 #
@@ -62,6 +107,8 @@ my @defaults = (
 
 # set default values where specs are missing
 #
+# return most recent mtime from pagedir or autocheck list if sitemap is enabled
+#
 sub checkspecs {
   my $specs = shift;
 # set defaults
@@ -69,8 +116,23 @@ sub checkspecs {
     $specs->{$defaults[$i]} = $defaults[$i+1]
 	unless exists $specs->{$defaults[$i]};
   }
-  $specs->{pagedir} .= '/' unless $specs->{pagedir} =~ m|/$|;
-  $specs->{javascript} .= '/' unless $specs->{javascript} =~ m|/$|;
+  foreach('pagedir', 'javascript', 'sitemapdir') {
+    if (exists $specs->{$_}) {
+      $specs->{$_} = $' if $specs->{$_} =~ m|^/|;
+      $specs->{$_} .= '/' unless $specs->{$_} =~ m|/$|;
+    }
+  }
+  if (exists $specs->{sitemapdir}) {
+    my $mtime = (stat($specs->{pagedir}))[9];
+    if (exists $specs->{autocheck} && ref $specs->{autocheck}) {
+      foreach (@{$specs->{autocheck}}) {
+	$_ = $' if $_ =~ m|^/|;
+	my $t = (stat($_))[9];
+	$mtime = $t if $t > $mtime;
+      }
+    }
+    return $mtime;
+  }
 }
 
 # generate the style library
@@ -343,6 +405,21 @@ sub trailgen {
 |;
 }
 
+# parse link text
+#
+# input:	seperator,
+#		link string
+# returns:	page, text, status
+#
+sub parseLINK {
+  my($sep,$link) = @_;
+  $sep = quotemeta($sep);
+  my ($page,$text,$status) = split(m{$sep},$link);
+  $text = $page unless $text;
+  $status = $text unless $status;
+  return ($page,$text,$status);
+}
+
 # replace LINK text
 #
 # input:	pointer to page hash,
@@ -353,10 +430,7 @@ sub fixLINKs {
   my($pp,$html) = @_;
   while ($html =~ m{LINK\<(.)([^>]+)>}) {
     my $match = quotemeta $&;
-    my $s = quotemeta $1;
-    my($page,$link,$status) = split(m{$s},$2);
-    $link = $page unless $link;
-    $status = $link unless $status;
+    my($page,$link,$status) = parseLINK($1,$2);
     my $replacement = q|<a class="B" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
     if (exists $pp->{$page}) {
       $replacement .= q|onClick="return(npg('|. $page .q|'));" href="./">|;
@@ -422,7 +496,8 @@ sub getColArray {
 
 # generate main body text
 #
-# input:	pointer to page hash,
+# input:	pointer to specs hash,
+#		pointer to page hash,
 #		page name
 #		page width
 #		pages directory path
@@ -433,9 +508,14 @@ sub getColArray {
 #
 
 sub bodygen {
-  my($pp,$page,$pw,$pd) = @_;
+  my($specs,$pp,$page,$pw,$pd) = @_;
   return '' unless exists $pp->{$page};
   my @ca = getColArray($pp,$page,$pw);
+  my($smp,$smn);			# sitemap path and position number
+  if ($page eq 'Sitemap' && exists $specs->{sitemapdir}) {
+    $smp = $specs->{sitemapdir} . 'sitemap.htxt';
+    $smn = $pp->{Sitemap}->{autocol} || 1;
+  }
   my $phead = $pp->{$page}->{heading} || '';
   my $html = q|<table cellspacing=5 cellpadding=0 border=0 width="|. $pw .q|">|."\n  <tr>";
   foreach (@ca) {
@@ -453,8 +533,12 @@ sub bodygen {
 
   foreach (1..@ca) {
     $html .= q|<td valign=top class=PT>|;
-    my $file = $pd . $page .'.c'. $_;
-    $html .= file2text($pp,$file);
+    if ($smn && $smn == $_) {
+      $html .= file2text($pp,$smp);
+    } else {
+      my $file = $pd . $page .'.c'. $_;
+      $html .= file2text($pp,$file);
+    }
     $html .= '</td>';
   }
   return $html .q|</tr></table>|;
@@ -548,11 +632,14 @@ sub build {
     $debug = $page;
     $page = $tmp;
   }
-  checkspecs($specs);			# set defaults for missing specs
+  my $mtime = checkspecs($specs);			# set defaults for missing specs
+
+# update the site map if needed
+  updsitemap($specs,$pp,$mtime);
+
 # build the head
 #
   my $pagedir = $specs->{pagedir};
-  $pagedir .= '/' unless $pagedir =~ m|/$|;
   my $title = (exists $pp->{$page}->{title})
 	? $pp->{$page}->{title}
 	: (exists $pp->{$page}->{heading})
@@ -609,7 +696,7 @@ all the features on this page</font>
   if ($debug) {
     $html .=  srcgen($pp,$debug,$specs->{pagewidth},$pagedir);
   } else {
-    $html .= bodygen($pp,$page,$specs->{pagewidth},$pagedir);
+    $html .= bodygen($specs,$pp,$page,$specs->{pagewidth},$pagedir);
   }
   $html .= "\n". $divtxt .q|<font size=1>&nbsp;<p></font>
 </td></tr>
@@ -622,6 +709,431 @@ all the features on this page</font>
   }
   print $html;
 }
+
+###################################
+# sitemap code
+###################################
+
+# check for LINKs and HREFs in a scaffold page
+#
+# input:	specs ptr,
+#		sitemap ptr,
+#		pages ptr,
+#		page name
+# returns:	last modified time for page
+#
+sub chk4links {
+  my($specs,$sm,$pages,$pg) = @_;
+#print "CHK4LINKS $pg\n";
+# load page text
+  local *H;
+  my $html = '';
+  opendir(H,$specs->{pagedir}) or die "could not open $specs->{pagedir}\n";
+  my @files = grep($_ =~ /${pg}\.[^~]+$/,readdir(H));
+  my $mtime = 0;
+  
+  foreach my $f (qw(meta head top)) {	# include defaults
+    unless (grep(/$f$/,@files)) {
+      push @files, 'Default.'. $f;
+    }
+  }
+  {
+#print "FILES = @files\n";
+    undef local $/;
+    foreach (@files) {
+      my $file = $specs->{pagedir} . $_;
+      next unless -e $file;		# skip non-existent defaults
+      my $m = (stat($file))[9];
+      $mtime = $m if $mtime < $m;
+      next if $_ =~ /(?:meta|head)$/;
+      next unless open(H,$file);
+      $html .= <H>;
+      close H;
+    }
+  }
+# check for LINKS
+  my @links;
+  while ($html =~ m{LINK\<(.)([^>]+)>}) {
+    $html = $` . $';			# reconstitute HTML with string removed
+    my $sep = $1;
+    my($plink,$text,$status) = parseLINK($1,$2);
+    next if exists $sm->{$plink};
+    if (exists $pages->{$plink}) {
+      $sm->{$plink} = [$sep,$plink,$status];
+      push @links, [$plink,1];
+    } elsif ($plink !~ m|\://| && $plink !~ /\@/) {
+      $sm->{$plink} = [$sep,$plink,$status];
+      push @links, [$plink,0];
+    }
+  }
+# all links collected and marked, recurse links
+  foreach (@links) {
+    my($plink,$isLINK) = @{$_};
+    my $tab = $specs->{'_tab'};
+    push @{$specs->{'_sm'}}, [$tab,$plink];
+    if ($isLINK) {
+      rcursite($specs,$sm,$pages,$plink);	# recurse if a menu page
+    } else {
+      chkLocalPage($specs,$sm,$plink);
+    }
+  }
+# check for HREF's
+  return $mtime if nosearch($specs,$pg);	# don't check links if no search
+  chk4hrefs($specs,$sm,\$html);
+  $mtime;
+}
+
+# check for HREFs in an string
+#
+# input:	specs ptr,
+#		sitemap ptr,
+#		string ptr,
+#
+sub chk4hrefs {
+  my($specs,$sm,$hp) =@_;
+#  while ($$hp =~ m{href=\"?([^?" \r\n]+)}) {
+  my @links;
+  while ($$hp =~ m{<a\s+href=\"?([^?" >\r\n]+)(.*?<)/a>}si) {
+    my $match = $&;
+    my $link = $1;
+    $$hp = $` . $';			# reconstitute HTML with string removed
+    $2 =~ />(.*?)</s;
+    my $text = $1;
+    next unless $text;
+    unless (exists $sm->{$link} || $link =~ m|\://|s || $link =~ /\@/s) {
+      my $sep;		# scoping error in perl foreach 5.6.1
+      foreach ('#', '!', '%', '&',('0'..'9'),('A'..'Z'),('a'..'z')) {
+	next if $match =~ /$_/s;
+	$sep = $_;
+	last;
+      }
+      $sm->{$link} = [$sep,$link,$text];
+      push @links, $link;
+    }
+  }
+# all links collected and marked, recurse them
+  my $tab = $specs->{'_tab'};
+  foreach my $link (@links) {
+    push @{$specs->{'_sm'}}, [$tab,$link];
+#print "ck4............. $link to LCL\n";
+    chkLocalPage($specs,$sm,$link);
+  }
+}
+
+# check for no search
+#
+# input:	pointer to specs
+#		page name
+# returns:	true = no search
+#		else false
+#
+sub nosearch {
+  my($specs,$pg) = @_;
+  if (exists $specs->{nosearch}) {
+    foreach(@{$specs->{nosearch}}) {
+      return 1 if $pg =~ /$_/i;
+    }
+  }
+  return 0;
+}
+
+# check an HTML page for HREF's
+#
+# input:	specs ptr,
+#		sitemap ptr,
+#		string ptr
+#
+sub chkLocalPage {
+  my($specs,$sm,$pg) = @_;
+  $pg =~ s|/||
+	if $pg =~ m|^/|;
+  return unless -e $pg;
+  ${$sm->{$pg}}[3] = (stat($pg))[9];
+  return if nosearch($specs,$pg);
+#  ++$specs->{'_tab'};
+  local *F;
+#print "LOCLPG $pg\n";
+  return unless open(F,$pg);
+  undef local $/;
+  my $html = <F>;
+  close F;
+  chk4hrefs($specs,$sm,\$html);
+#  --$specs->{'_tab'};
+}
+
+# recurse through scaffold pages beginning with 'page' to build sitemap
+#
+# input:	specs ptr,
+#		sitemap ptr,
+#		pages ptr,
+#		page name
+#
+sub rcursite {
+  my($specs,$sm,$pages,$pg) = @_;
+  return unless exists $pages->{$pg} && exists $pages->{$pg}->{menu};   # skip debug pages
+  my $tab = ++$specs->{'_tab'};
+#print "RPAGE = ........ $pg\n";
+  my $count = 0;
+# check menu's
+  my @pages = @{$pages->{$pg}->{menu}};
+  if (exists $pages->{$pg}->{submenu}) {
+    push @pages, @{$pages->{$pg}->{submenu}};
+  }
+  if (exists $pages->{$pg}->{trailer} && exists $pages->{$pg}->{trailer}->{links}) {
+    push @pages, @{$pages->{$pg}->{trailer}->{links}};
+  }
+  my @lclks;				# local links this page
+  foreach (0..$#pages) {
+    my $pgname = $pages[$_];
+    next if exists $sm->{$pgname};		# pick off most of the page names early
+#print "PROCESS $pgname\n";
+    my $text = my $status = $pgname;
+    my $sep = '#';
+    unless (exists $pages->{$pgname}) {
+      $pgname =~ m{(.)(.+)};		# skim off the first character
+      $sep = $1;
+      ($pgname,$text,$status) = parseLINK($1,$2);
+      $text = $pgname unless $text;
+      $status = $text unless $status;
+      $pages[$_] = $pgname;
+    }
+    next if exists $sm->{$pgname};		# pick off all processed page names
+    if (exists $pages->{$pgname}) {			# if this is a scaffold page
+      $sm->{$pgname} = [$sep,$pgname,$status];
+      push @lclks, [$pgname,1];
+    }
+    elsif ($pgname !~ m|\://| && $pgname !~ /\@/) {	# or a link but not absolute or mail
+      $sm->{$pgname} = [$sep,$pgname,$status];
+      push @lclks, [$pgname,0];
+    }
+  }
+#  chk4links($specs,$sm,$pages,$pg)
+#	unless exists $sm->{$pg};
+# page level is established, recurse each link
+  foreach (@lclks) {
+    my($pgname,$isLINK) = @{$_};
+    push @{$specs->{'_sm'}}, [$tab,$pgname];
+#print "RECURSING $pgname\n";
+    if ($isLINK) {
+      rcursite($specs,$sm,$pages,$pgname);
+    }
+    else {
+#print "rcur........... $pgname to LCL\n";
+      chkLocalPage($specs,$sm,$pgname);
+    }
+  }
+  ${$sm->{$pg}}[3] = chk4links($specs,$sm,$pages,$pg);
+  --$specs->{'_tab'};  
+}
+
+# build a sitemap structure
+#
+# input:	specs ptr,
+#		pages ptr
+#
+# returns:	sitemap hash pointer
+#
+# REMEMBER to DELETE $specs->{_tab} {_sm} when done
+#
+sub sitestruct {
+  my($specs,$pages) = @_;
+  $specs->{'_tab'} = 0;
+  $specs->{_sm} = [];
+  my $sitemap = {
+	Home	=> ['#','Home','Home'],
+	Default	=> ['#','Default','Default'],
+  };
+  push @{$specs->{_sm}}, [0,'Home'];
+#  chk4links($specs,$sitemap,$pages,'Home');
+  chk4links($specs,$sitemap,$pages,'Default');	# include Default contents
+  delete $sitemap->{Default};			# page name does not belong in sitemap
+  rcursite($specs,$sitemap,$pages,'Home');
+  chkLocalPage($specs,$sitemap,'index.shtml');
+  return $sitemap;
+}
+
+# return xml time for sitemap xml files
+#
+# input:	time since the epoch
+# returns:	yyyy-mm-dd
+#
+sub xmltime {
+  my $time = shift;
+  my($mday,$mon,$year) = (localtime($time))[3,4,5];
+  ++$mon;
+  $year += 1900;
+  return sprintf("%04d-%02d-%02d",$year,$mon,$mday);
+}
+
+# build html and xml sitemap pages
+#
+# input:	specs ptr,
+#		pages ptr,
+#		sitemap ptr
+#
+# returns:	html string, xml string
+#
+sub sitemap {
+  my($specs,$pp,$sm) = @_;
+  my $html = '';
+  my $port = $ENV{SERVER_PORT} || 80;
+  $port = ($port == 80)
+	? '' : ':'. $port;
+  my $srvr = $ENV{SERVER_NAME} || 'WebScaffoldText';
+  my $xml = q|<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+|;
+  my $now = xmltime(time);
+  my $mtime = (stat($specs->{pagedir}))[9];
+  $mtime = xmltime($mtime);
+  my $cf = $specs->{changefreq};
+
+  foreach (@{$specs->{'_sm'}}) {
+    my($tab,$page) = @{$_};
+    while (0 < $tab--) {
+      $html .= '&nbsp;&nbsp;&nbsp;&nbsp;';
+    }
+    my($sep,$pg,$txt,$m) = @{$sm->{$page}};
+    $m = 0 unless $m;
+    my $ftime = xmltime($m);
+#print "SEP='$sep' PG='$pg' TXT='$txt'\n";
+
+# generate html
+    $html .= 'LINK<'. $sep . $pg . $sep . $txt . $sep . $txt ."><br>\n";
+# generate xml
+    $xml .= q|<url>
+  <loc>http://|. $srvr . $port;
+    if (exists $pp->{$pg}) {		# if this is a scaffold page
+      $xml .= q|/index.shtml?page=|. $pg .q|</loc>|;
+    } else {
+      if ($pg =~ m|^/|) {
+	$pg = $';
+      }
+      $xml .= '/'. $pg . q|</loc>|;
+    }
+    $xml .= q|
+  <lastmod>|. $ftime .q|</lastmod>
+  <changefreq>|. $cf .q|</changefreq>
+</url>
+|;
+  }
+  $xml .= q|</urlset>
+|;
+  $html = fixLINKs($pp,$html);
+  return ($html,$xml);  
+}
+
+# check and update the sitemap
+#
+# input:	specs ptr,
+#		page ptr,
+# returns:	sitemap structure pointer
+#		else false
+#
+# writes htxt and xml pages if needed
+#
+sub updsitemap {
+  my($specs,$pages,$pgt) = @_;
+  return undef unless exists $specs->{sitemapdir} &&	# no update required, no sitemap
+	 -e $specs->{sitemapdir} &&
+	 -w $specs->{sitemapdir};
+  my $smt = 0;						# trial sitemap timestamp
+  my $smf = $specs->{sitemapdir} .'sitemap.xml';
+  if (-e $smf) {
+    $smt = (stat($smf))[9];
+  }
+  return undef if $pgt <= $smt;
+
+  local(*LOCK, *F);
+  my $perms = 0644;
+  my $oldmask = umask 022;
+  unless (sysopen LOCK, $smf .'.lock', O_RDWR|O_CREAT|O_TRUNC, $perms) {
+    umask $oldmask;
+    $! = 11;		# 11 Resource temporarily unavailable
+    return undef;
+  }
+  umask $oldmask;
+  unless (flock(LOCK, LOCK_EX())) {
+    close LOCK;
+    return 0;
+  }
+
+# build the sitemap structure
+  my $sm = sitestruct($specs,$pages);
+
+# build the html and xml text
+  my($htext,$xtext) = sitemap($specs,$pages,$sm);
+
+# write the files
+  if (open(F,'>'. $smf .'.tmp')) {
+    print F $xtext;
+    close F;
+    rename $smf .'.tmp', $smf;				# atomic update
+  }
+  $smf = $specs->{sitemapdir} .'sitemap.htxt';
+  if (open(F,'>'. $smf .'.tmp')) {
+    print F $htext;
+    close F;
+    rename $smf .'.tmp', $smf;
+  }
+  flock(LOCK,LOCK_UN());
+  close LOCK;
+}
+
+# generate the structure of the site map, human readable
+# 
+# input:	specs ptr,
+#		sitemap ptr
+#
+# returns:	text
+#
+sub debugstruct {
+  my($specs,$sm) = @_;
+  my $txt = '';
+  foreach (@{$specs->{'_sm'}}) {
+    my($tab,$page) = @{$_};
+    while (0 < $tab--) {
+      $txt .= '    ';
+    }
+    $txt .= "@{$sm->{$page}}\n"
+  }
+  return $txt;
+}
+
+# generate the sitemap contents, not ordered, human readable
+#
+# input:	sitemap ptr
+#
+# returns:	text
+#
+sub debugsmap {
+  my $sitemap = shift;  
+  my $txt = '';
+  foreach (sort keys %$sitemap) {
+    my @ary = @{$sitemap->{$_}};
+    $txt .= "$_\t => @ary\n";
+  }
+}
+
+
+## generate sitemap hash
+#my $sm = sitestruct(\%specs,\%pages);
+
+
+#my ($htext,$xtext) = sitemap(\%specs,\%pages,$sm);
+
+#print $htext,"\n\n",$xtext;
+#print debugstruct(\%specs,$sm);
+
+#  checkspecs(\%specs);
+
+#if (updsitemap(\%specs,\%pages)) {
+#  print "DONE\n";
+#} else {
+#  print "NOTHING\n";
+#}
+#delete $specs{_sm};
+#delete $specs{_tab};
 
 1;
 __END__
@@ -646,6 +1158,8 @@ includes that are written in very basic html.
 In its simplest form, your web will have the following structure:
 
   pages/	contains minimalist html pages
+  ws_sitemap/	[optional] contains sitemap in google xml format
+		NOTE: link this into public_html
   public_html/	contains the index page and
 		any non Web::Scaffold pages
 	images/	contains web site images
@@ -691,10 +1205,52 @@ The specifications for fonts, menu, links, colors
   #
 	pagedir		=> '../pages',
 
-  # directory path for 'javascript libraries' relative to 
-  # html root         defaults to:
+  # directory path for 'javascript libraries' relative to html root
+  # defaults to:
 
 	javascript	=> 'lib',
+
+  # no search conditions for building the site map. Each
+  # element is evaluated as a perl match condition in the
+  # context of m/element/. Include page names, extensions, etc...
+  #
+  # [OPTIONAL]
+  #
+
+	nosearch	=> [ 'pdf' ],
+
+  # Directory path for 'sitemap' page generation relative to the 
+  # html root. This directory must be WRITABLE by the web server.
+  #
+  # NOTE: link the file 'sitemapdir'/sitemaplxml to the 
+  # appropriate location in your web directory.
+  # 
+  # The sitemap.xml file will be generated and updated ONLY if 
+  # the 'sitemapdir' key is present in this configuration file.
+  #
+  # The sitemap page will auto update if you modify pages in
+  # 'pagedir' or in the 'autocheck' list below. If you modify 
+  # static pages elsewhere in the web directory tree that are
+  # not listed in 'autocheck', you must DELETE the sitemap.xml 
+  # file to force an update.
+  #
+  # [OPTIONAL]
+  #
+  #	sitemapdir	=> '../ws_sitemap',
+
+  # Directories to autocheck for sitemap update.
+  # you can list BOTH directories and individual files
+  # here relative to the web root. The 'sitemapdir' and
+  # 'pagedir' are always checked and do not need to be
+  # listed here.
+  #
+	autocheck	=> ['docs'],
+
+  # site map <changefreq> hint
+  #
+  # defaults to:
+  #
+	changefreq	=> 'monthly',
 
   # font family used throughout the document
   #
@@ -711,28 +1267,28 @@ The specifications for fonts, menu, links, colors
 	menudrop	=> '55',	# drop down position
 	menuwidth	=> '100px',	# width of menu item
 	pagewidth	=> '620px',	# recommended
-  # meNU font specifications - class='NU'
-  	menucolor	=> 'black',
+  # menu font specifications
+	menucolor	=> 'black',
 	menuhot		=> 'yellow',	# mouse over
 	menucold	=> 'white',	# page selected
 	menustyle	=> 'normal',	# bold, italic
 	menusize	=> '13px',	# font points or pixels
 	sepcolor	=> 'black',	# separator color
 
-  # Basic link font specifications - class='B'
+  # Page link font specifications
   #
 	linkcolor	=> 'blue',
 	linkhot		=> 'green',
 	linkstyle	=> 'normal',	# bold, italic
 	linksize	=> '13px',	# font points or pixels
 
-  # Page Text font specifications - class='PT'
+  # Page Text font specifications
   #
  	fontcolor	=> 'black',
 	fontstyle	=> 'normal',
 	fontsize	=> '13px',
 
-  # Heading Text specifications - class='HT'
+  # Heading font specifications
   #
 	headcolor	=> 'black',
 	headstyle	=> 'bold',	# normal, italic
@@ -805,6 +1361,18 @@ required page 'Home', they are as follows:
 	},
   #
   #	... and so on
+
+  # for the auto-generated Sitemap page, there is one additional
+  # specification element...
+  #
+	Sitemap	=> {
+		...
+  # specify the column in which the sitemap should appear
+  # defaults to '1'
+		autocol	=> 1,
+		...
+	},
+
 
   # and for debug... example
   # load this page segment as source in a single window
@@ -915,11 +1483,31 @@ Each web page assembled by B<Web::Scaffold> as follows:
   </body>
   </html>
 
+=head2 Sitemap
+
+B<Web::Scaffold> will automatically write as sitemap.xml sitemap file and a
+corresponding scaffold page named B<Sitemap.htxt> the first time the site is
+accessed if the specification KEY, 'sitemapdir' for
+the sitemap is present. 
+
+The format of the sitemap.xml page may be found at:
+L<http://www.sitemaps.org/protocol.html>
+
+If you modify any pages in the scaffold 'pagedir' or pages or directories 
+listed in the 'autocheck' list, the sitemap will
+auto update. If you modify a static page elsewhere in the web site that are
+not listed in 'autocheck', you must DELETE sitemap.xml to force and
+update.
+
+You must include a spec for the B<Sitemap> page in the %pages configuration.
+
+If you wish to use your own sitemap, do not activate the specification KEY.
+
 =head1 AUTHOR
 
 Michael Robinton E<lt>michael@bizsystems.comE<gt>
 
-=head1 COPYRIGHT AND LICENCE
+=head1 COPYRIGHT AND LICENSE
 
 This notice does NOT cover the javascript libraries. Those libraries are
 freely usable but copyright and licensed all or in part by others and
@@ -927,7 +1515,7 @@ have their own copyright notices and license requirements. Please read
 the text in the individual libraries to determine their specific licensing
 and copyright notice requirements.
 
-Copyright 2006, Michael Robinton E<lt>michael@bizsystems.comE<gt>
+Copyright 2006 - 2007, Michael Robinton E<lt>michael@bizsystems.comE<gt>
  
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

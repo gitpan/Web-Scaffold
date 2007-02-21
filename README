@@ -15,6 +15,8 @@ DESCRIPTION
     In its simplest form, your web will have the following structure:
 
       pages/        contains minimalist html pages
+      ws_sitemap/   [optional] contains sitemap in google xml format
+                    NOTE: link this into public_html
       public_html/  contains the index page and
                     any non Web::Scaffold pages
             images/ contains web site images
@@ -55,10 +57,52 @@ CONFIGURATION
           #
                 pagedir         => '../pages',
 
-          # directory path for 'javascript libraries' relative to 
-          # html root         defaults to:
+          # directory path for 'javascript libraries' relative to html root
+          # defaults to:
 
                 javascript      => 'lib',
+
+          # no search conditions for building the site map. Each
+          # element is evaluated as a perl match condition in the
+          # context of m/element/. Include page names, extensions, etc...
+          #
+          # [OPTIONAL]
+          #
+
+                nosearch        => [ 'pdf' ],
+
+          # Directory path for 'sitemap' page generation relative to the 
+          # html root. This directory must be WRITABLE by the web server.
+          #
+          # NOTE: link the file 'sitemapdir'/sitemaplxml to the 
+          # appropriate location in your web directory.
+          # 
+          # The sitemap.xml file will be generated and updated ONLY if 
+          # the 'sitemapdir' key is present in this configuration file.
+          #
+          # The sitemap page will auto update if you modify pages in
+          # 'pagedir' or in the 'autocheck' list below. If you modify 
+          # static pages elsewhere in the web directory tree that are
+          # not listed in 'autocheck', you must DELETE the sitemap.xml 
+          # file to force an update.
+          #
+          # [OPTIONAL]
+          #
+          #     sitemapdir      => '../ws_sitemap',
+
+          # Directories to autocheck for sitemap update.
+          # you can list BOTH directories and individual files
+          # here relative to the web root. The 'sitemapdir' and
+          # 'pagedir' are always checked and do not need to be
+          # listed here.
+          #
+                autocheck       => ['docs'],
+
+          # site map <changefreq> hint
+          #
+          # defaults to:
+          #
+                changefreq      => 'monthly',
 
           # font family used throughout the document
           #
@@ -75,7 +119,7 @@ CONFIGURATION
                 menudrop        => '55',        # drop down position
                 menuwidth       => '100px',     # width of menu item
                 pagewidth       => '620px',     # recommended
-          # meNU font specifications - class='NU'
+          # menu font specifications
                 menucolor       => 'black',
                 menuhot         => 'yellow',    # mouse over
                 menucold        => 'white',     # page selected
@@ -83,20 +127,20 @@ CONFIGURATION
                 menusize        => '13px',      # font points or pixels
                 sepcolor        => 'black',     # separator color
 
-          # Basic link font specifications - class='B'
+          # Page link font specifications
           #
                 linkcolor       => 'blue',
                 linkhot         => 'green',
                 linkstyle       => 'normal',    # bold, italic
                 linksize        => '13px',      # font points or pixels
 
-          # Page Text font specifications - class='PT'
+          # Page Text font specifications
           #
                 fontcolor       => 'black',
                 fontstyle       => 'normal',
                 fontsize        => '13px',
 
-          # Heading Text specifications - class='HT'
+          # Heading font specifications
           #
                 headcolor       => 'black',
                 headstyle       => 'bold',      # normal, italic
@@ -168,6 +212,17 @@ CONFIGURATION
                 },
           #
           #     ... and so on
+
+          # for the auto-generated Sitemap page, there is one additional
+          # specification element...
+          #
+                Sitemap => {
+                        ...
+          # specify the column in which the sitemap should appear
+          # defaults to '1'
+                        autocol => 1,
+                        ...
+                },
 
           # and for debug... example
           # load this page segment as source in a single window
@@ -271,6 +326,28 @@ OPERATION
       [optional] trailer
       </body>
       </html>
+
+  Sitemap
+
+    Web::Scaffold will automatically write as sitemap.xml sitemap file and a
+    corresponding scaffold page named Sitemap.htxt the first time the site
+    is accessed if the specification KEY, 'sitemapdir' for the sitemap is
+    present.
+
+    The format of the sitemap.xml page may be found at:
+    http://www.sitemaps.org/protocol.html
+
+    If you modify any pages in the scaffold 'pagedir' or pages or
+    directories listed in the 'autocheck' list, the sitemap will auto
+    update. If you modify a static page elsewhere in the web site that are
+    not listed in 'autocheck', you must DELETE sitemap.xml to force and
+    update.
+
+    You must include a spec for the Sitemap page in the %pages
+    configuration.
+
+    If you wish to use your own sitemap, do not activate the specification
+    KEY.
 
 AUTHOR
     Michael Robinton <michael@bizsystems.com>

@@ -84,7 +84,7 @@ my $exp = q|<table cellspacing=5 cellpadding=0 border=0 width="1234">
   <tr><td colspan=3>&nbsp;</td></tr>
   <tr><td valign=top class=PT>&nbsp;</td><td valign=top class=PT>&nbsp;</td><td valign=top class=PT>&nbsp;</td></tr></table>|;
 my $width = 1234;
-my $got = bodygen($pages,'TEST2',$width,$dir);
+my $got = bodygen(undef,$pages,'TEST2',$width,$dir);
 gotexp($got,$exp);
 
 ## test 3	check default column generation
@@ -92,5 +92,5 @@ $exp = q|<table cellspacing=5 cellpadding=0 border=0 width="1234">
   <tr><td width=1234>&nbsp;</td></tr>
   <tr><td colspan=1>&nbsp;</td></tr>
   <tr><td valign=top class=PT>&nbsp;</td></tr></table>|;
-$got = bodygen($pages,'TEST3',$width,$dir);
+$got = bodygen(undef,$pages,'TEST3',$width,$dir);
 gotexp($got,$exp);

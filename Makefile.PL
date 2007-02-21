@@ -5,6 +5,10 @@ my $pkg = 'Web::Scaffold';
 $pkg =~ /[^:]+$/;
 my $module = $& .'.pm';
 
+# this is for the example web site
+# comment it out if it bothers you
+chmod 0777, 'example_website/ws_sitemap';
+
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
