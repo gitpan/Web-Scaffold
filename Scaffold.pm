@@ -6,7 +6,7 @@ use POSIX;
 use Fcntl qw(:flock);
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.09 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -980,9 +980,12 @@ sub sitemap {
   $port = ($port == 80)
 	? '' : ':'. $port;
   my $srvr = $ENV{SERVER_NAME} || 'WebScaffoldText';
-  my $xml = q|<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  my $xml = q|<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
+xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 |;
+
   my $now = xmltime(time);
   my $mtime = (stat($specs->{pagedir}))[9];
   $mtime = xmltime($mtime);
@@ -1489,9 +1492,6 @@ B<Web::Scaffold> will automatically write as sitemap.xml sitemap file and a
 corresponding scaffold page named B<Sitemap.htxt> the first time the site is
 accessed if the specification KEY, 'sitemapdir' for
 the sitemap is present. 
-
-The format of the sitemap.xml page may be found at:
-L<http://www.sitemaps.org/protocol.html>
 
 If you modify any pages in the scaffold 'pagedir' or pages or directories 
 listed in the 'autocheck' list, the sitemap will

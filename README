@@ -334,9 +334,6 @@ OPERATION
     is accessed if the specification KEY, 'sitemapdir' for the sitemap is
     present.
 
-    The format of the sitemap.xml page may be found at:
-    http://www.sitemaps.org/protocol.html
-
     If you modify any pages in the scaffold 'pagedir' or pages or
     directories listed in the 'autocheck' list, the sitemap will auto
     update. If you modify a static page elsewhere in the web site that are
@@ -352,14 +349,14 @@ OPERATION
 AUTHOR
     Michael Robinton <michael@bizsystems.com>
 
-COPYRIGHT AND LICENCE
+COPYRIGHT AND LICENSE
     This notice does NOT cover the javascript libraries. Those libraries are
     freely usable but copyright and licensed all or in part by others and
     have their own copyright notices and license requirements. Please read
     the text in the individual libraries to determine their specific
     licensing and copyright notice requirements.
 
-    Copyright 2006, Michael Robinton <michael@bizsystems.com>
+    Copyright 2006 - 2007, Michael Robinton <michael@bizsystems.com>
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the
