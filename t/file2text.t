@@ -121,35 +121,35 @@ close F;
 my $exp = q|Gotta line up the LINK's for inspection.
 Here are all the varients for LINK's:
 
-This is LINK with page only <a class="B" onMouseOver="self.status='TEST';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> no trailing separator,
-LINK with          trailing <a class="B" onMouseOver="self.status='TEST';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> separator,
-LINK with         link text <a class="B" onMouseOver="self.status='some link text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">some link text</a> no trailing separator,
-then LINK with    link text <a class="B" onMouseOver="self.status='more link text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">more link text</a> and trailing separator,
+This is LINK with page only <a class="B" title="TEST" onMouseOver="self.status='TEST';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> no trailing separator,
+LINK with          trailing <a class="B" title="TEST" onMouseOver="self.status='TEST';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> separator,
+LINK with         link text <a class="B" title="some link text" onMouseOver="self.status='some link text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">some link text</a> no trailing separator,
+then LINK with    link text <a class="B" title="more link text" onMouseOver="self.status='more link text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">more link text</a> and trailing separator,
 then LINK with 
-         link text + status <a class="B" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">link text</a> no
+         link text + status <a class="B" title="status text" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">link text</a> no
 separator, then LINK 
-with          link + status <a class="B" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">link text</a>
+with          link + status <a class="B" title="status text" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">link text</a>
 separator, then LINK without 
-link but        with status <a class="B" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a>
+link but        with status <a class="B" title="status text" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a>
 but no separator, then LINK without 
-link        but with status <a class="B" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> and trailing separator.
+link        but with status <a class="B" title="status text" onMouseOver="self.status='status text';return true;" onMouseOut="self.status='';return true;" onClick="return(npg('TEST'));" href="./">TEST</a> and trailing separator.
 
 Next do the same for URL's:
 
-This is LINK  with file URL only <a class="B" onMouseOver="self.status='./path/name';return true;" onMouseOut="self.status='';return true;" href="./path/name">./path/name</a>,
-LINK with               file URL <a class="B" onMouseOver="self.status='./path/name';return true;" onMouseOut="self.status='';return true;" href="./path/name">./path/name</a> and separator,
-followed by file URL + link text <a class="B" onMouseOver="self.status='path text';return true;" onMouseOut="self.status='';return true;" href="./path/name">path text</a> then
-file             URL + link text <a class="B" onMouseOver="self.status='path text';return true;" onMouseOut="self.status='';return true;" href="./path/name">path text</a> with separator,
-then file    URL + link + status <a class="B" onMouseOver="self.status='and status';return true;" onMouseOut="self.status='';return true;" href="./file/path/name">path text</a>
+This is LINK  with file URL only <a class="B" title="./path/name" onMouseOver="self.status='./path/name';return true;" onMouseOut="self.status='';return true;" href="./path/name">./path/name</a>,
+LINK with               file URL <a class="B" title="./path/name" onMouseOver="self.status='./path/name';return true;" onMouseOut="self.status='';return true;" href="./path/name">./path/name</a> and separator,
+followed by file URL + link text <a class="B" title="path text" onMouseOver="self.status='path text';return true;" onMouseOut="self.status='';return true;" href="./path/name">path text</a> then
+file             URL + link text <a class="B" title="path text" onMouseOver="self.status='path text';return true;" onMouseOut="self.status='';return true;" href="./path/name">path text</a> with separator,
+then file    URL + link + status <a class="B" title="and status" onMouseOver="self.status='and status';return true;" onMouseOut="self.status='';return true;" href="./file/path/name">path text</a>
 with no separator. 
 
 If all this works, try a couple of long URL's:
 
-This is LINK with    web URL <a class="B" onMouseOver="self.status='http://www.somewhere.com/';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">http://www.somewhere.com/</a> no separator,
-LINK with            web URL <a class="B" onMouseOver="self.status='http://www.somewhere.com/';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">http://www.somewhere.com/</a> with separator,
-LINK with web URL + url text <a class="B" onMouseOver="self.status='SOMEWHERE';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">SOMEWHERE</a>
+This is LINK with    web URL <a class="B" title="http://www.somewhere.com/" onMouseOver="self.status='http://www.somewhere.com/';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">http://www.somewhere.com/</a> no separator,
+LINK with            web URL <a class="B" title="http://www.somewhere.com/" onMouseOver="self.status='http://www.somewhere.com/';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">http://www.somewhere.com/</a> with separator,
+LINK with web URL + url text <a class="B" title="SOMEWHERE" onMouseOver="self.status='SOMEWHERE';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">SOMEWHERE</a>
 LINK with web URL + url text + status 
-                             <a class="B" onMouseOver="self.status='somewhere good';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">SOMEWHERE</a>, all done!
+                             <a class="B" title="somewhere good" onMouseOver="self.status='somewhere good';return true;" onMouseOut="self.status='';return true;" href="http://www.somewhere.com/">SOMEWHERE</a>, all done!
 |;
 
 ## test 3

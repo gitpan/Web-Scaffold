@@ -6,7 +6,7 @@ use POSIX;
 use Fcntl qw(:flock);
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.10 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.11 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -334,7 +334,7 @@ sub menugen {
     if (exists $pp->{$name} &&
 	exists $pp->{$name}->{submenu} &&
 	@{$pp->{$name}->{submenu}}) {	# build menu links
-      $html .= qq|id="L${linkCount}" href="$href" onMouseout="return(headOut());" onMouseover="return(headOver('$status',$linkCount));" $click>$text</a></td>
+      $html .= qq|id="L${linkCount}" href="$href" title="$status" onMouseout="return(headOut());" onMouseover="return(headOver('$status',$linkCount));" $click>$text</a></td>
 |;
       $div .= qq|<div id="menu${linkCount}" class="dropdown">
 |;
@@ -343,14 +343,14 @@ sub menugen {
 	$click = qq|onClick="return(linkClick('$name'));"| if $click;	# fix up click return
 	$class = ($name eq $page || $name eq $debug)
 		? 'CP' : 'NU';
-        $div .= qq|<a class="$class" href="$href" onMouseout="return(linkOut());" onMouseover="return(linkOver('$status'));" $click>$text</a><br>
+        $div .= qq|<a class="$class" href="$href" title="$status" onMouseout="return(linkOut());" onMouseover="return(linkOver('$status'));" $click>$text</a><br>
 |;
       }
       $div .= q|</div>
 |;
       ++$linkCount;
     } else {
-      $html .= qq|href="$href" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
+      $html .= qq|href="$href" title="$status" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
 |;
     }
   }  
@@ -388,7 +388,7 @@ sub trailgen {
       }
       my $class = $name eq $page ? 'CP' : 'NU';
       $html .= qq|  <td><a class="$class" |;
-      $html .= qq|href="$href" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
+      $html .= qq|href="$href" title="$status" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
 |;
     }
   }
@@ -431,7 +431,7 @@ sub fixLINKs {
   while ($html =~ m{LINK\<(.)([^>]+)>}) {
     my $match = quotemeta $&;
     my($page,$link,$status) = parseLINK($1,$2);
-    my $replacement = q|<a class="B" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
+    my $replacement = q|<a class="B" title="|. $status .q|" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
     if (exists $pp->{$page}) {
       $replacement .= q|onClick="return(npg('|. $page .q|'));" href="./">|;
     } else {
