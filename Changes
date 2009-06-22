@@ -1,5 +1,8 @@
 Revision history for Perl extension Web::Scaffold
 
+0.12  Mon Jun 22 13:24:36 PDT 2009
+	Correct sitemap header error
+
 0.11  Tue Apr 10 09:48:33 PDT 2007
 	add "title" statement to all html links
 

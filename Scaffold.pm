@@ -6,7 +6,7 @@ use POSIX;
 use Fcntl qw(:flock);
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.11 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.12 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -980,10 +980,11 @@ sub sitemap {
   $port = ($port == 80)
 	? '' : ':'. $port;
   my $srvr = $ENV{SERVER_NAME} || 'WebScaffoldText';
-  my $xml = q|<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  my $xml = q|<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd"
-xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 |;
 
   my $now = xmltime(time);
@@ -1515,7 +1516,7 @@ have their own copyright notices and license requirements. Please read
 the text in the individual libraries to determine their specific licensing
 and copyright notice requirements.
 
-Copyright 2006 - 2007, Michael Robinton E<lt>michael@bizsystems.comE<gt>
+Copyright 2006 - 2009, Michael Robinton E<lt>michael@bizsystems.comE<gt>
  
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
