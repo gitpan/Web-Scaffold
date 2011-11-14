@@ -4,8 +4,10 @@ MANIFEST
 Makefile.PL
 README
 Scaffold.pm
+example_website/pages/Default.head
 example_website/pages/Default.meta
 example_website/pages/Default.top
+example_website/pages/Default.savebkgnd
 example_website/pages/Home.c2
 example_website/pages/Home.c3
 example_website/pages/Home.meta
@@ -14,6 +16,12 @@ example_website/pages/Schema.c1
 example_website/pages/Schema.c2
 example_website/pages/Structure.c1
 example_website/pages/Structure.c2
+example_website/pages/manpage.c1
+example_website/pages/pages.c2
+example_website/pages/specs.c2
+example_website/public_html/images/scaffold2.jpg
+example_website/public_html/images/stripe1.gif
+example_website/public_html/images/stripe2.gif
 example_website/public_html/images/webscaffold01.jpg
 example_website/public_html/index.shtml
 example_website/public_html/lib/scaffold.js

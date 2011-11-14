@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # pages.cgi.example
-# version 1.02, 2-19-07, michael@bizsystems.com
+# version 1.04, 11-14-11, michael@bizsystems.com
 #
 use Web::Scaffold;
 
@@ -152,6 +152,11 @@ my $top = '|#top|TOP|TOP of page';
 #
 	Home	=> {
 	    menu	=> $menu,
+
+# optional table row immediately under menu. This allows a "drop"
+# shadow to be added to the menu bar with a "1" pixel wide image, 'example'  
+	    menustripe	=> '<img src="images/stripe1.gif" height=4 width=100%>',
+
 # optional title text - if missing, 'heading' text will be used
 	    title	=> 'Web::Scaffold, a perl extension for building web sites',
 
@@ -172,6 +177,14 @@ my $top = '|#top|TOP|TOP of page';
 # optional right hand side text. if there are no links then the
 # text will be placed on the left hand side of the trailer bar
 		text	=> $copyright,
+
+# optional table row immediately above trailer bar. this allows a "drop"  
+# shadow to be added to trailer bar with a "1" pixel wide image, 'example'
+		top	=> '<img src="images/stripe2.gif" height=4 width=100%>',
+
+# optional table row immediately below trailer bar. This allows a "top"       
+# shadow to be added to trailer bar with a "1" pixel wide image, 'example'   
+		bottom	=> '<img src="images/stripe1.gif" height=4 width=100%>',
 	    },
 	},
 
@@ -188,12 +201,14 @@ my $top = '|#top|TOP|TOP of page';
 	},
 	Structure	=> {
 	    menu	=> $menu,
+	    menustripe	=> '<img src="images/stripe1.gif" height=4 width=100%>',
 	    title	=> 'Web::Scaffold page structure',
 	    heading	=> '&nbsp;&nbsp;Site schema and page structure',
 	    column	=> ['50%', '50%'],
 	    trailer	=> {
 		links	=> [$top, 'Home'],
 		text	=> $copyright,
+		top	=> '<img src="images/stripe2.gif" height=4 width=100%>',
 	    },
 	},
 
@@ -202,7 +217,12 @@ my $top = '|#top|TOP|TOP of page';
 	    title	=> 'Web::Scaffold, page source text',
 	    heading	=> '&nbsp;&nbsp;&nbsp;&nbsp;View the Page Source text',
 	    column	=> [qw( 20 600)],
-	    submenu	=> [qw(Default.meta Default.top Home.meta Home.c2 Home.c3 pages.cgi scaffold.js winMenus.js winUtils.js)],
+	    submenu	=> [qw(
+			Default.meta Default.head Default.top 
+			Home.meta Home.c2 Home.c3
+			manpage.c1 pages.cgi pages.c2 specs.c2
+			scaffold.js winMenus.js winUtils.js
+			)],
 	    trailer	=> {
 		links	=> [$top, 'Home'],
 		text	=> $copyright,
@@ -258,6 +278,9 @@ my $top = '|#top|TOP|TOP of page';
 	'Default.top'	=> {
 	    debug	=> 'Page-Source',
 	},
+	'Default.head'	=> {
+	    debug	=> 'Page-Source',
+	},
 	'Home.meta'	=> {
 	    debug	=> 'Page-Source',
 	},
@@ -265,6 +288,15 @@ my $top = '|#top|TOP|TOP of page';
 	    debug	=> 'Page-Source',
 	},
 	'Home.c3'	=> {
+	    debug	=> 'Page-Source',
+	},
+	'manpage.c1'	=> {
+	    debug	=> 'Page-Source',
+	},
+	'pages.c2'	=> {
+	    debug	=> 'Page-Source',
+	},
+	'specs.c2'	=> {
 	    debug	=> 'Page-Source',
 	},
 	'pages.cgi'	=> {

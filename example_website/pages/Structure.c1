@@ -1,6 +1,7 @@
 <pre>
 pages/
   . LINK<#Default.meta>
+  . LINK<#Default.head>
   . LINK<#Default.top>
   . LINK<#Home.meta>
   . LINK<#Home.c2>

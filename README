@@ -186,6 +186,11 @@ CONFIGURATION
           # optional title text - if missing, 'heading' text will be used
                     title       => 'page title',
 
+          # optional table row immediately under menu. This allows a "drop"
+          # shadow to be added to the menu bar with a "1" pixel wide image, 'example'
+                    menustripe  => '<img src="images/stripe1.gif" height=4 width=100%>',
+
+          # optional
                     heading     => 'Text under menu, over body text',
 
           # number of columns and column width in pixels
@@ -203,6 +208,14 @@ CONFIGURATION
           # optional right hand side text. if there are no links then the
           # text will be placed on the left hand side of the trailer bar
                         text    => 'Copyright 2006, yourname',
+
+          # optional table row immediately above trailer bar. this allows a "drop"
+          # shadow to be added to trailer bar with a "1" pixel wide image, 'example'
+                        top     => '<img src="images/stripe2.gif" height=4 width=100%>',
+
+          # optional table row immediately below trailer bar. This allows a "top" 
+          # shadow to be added to trailer bar with a "1" pixel wide image,  'example'
+                        bottom  => '<img src="images/stripe1.gif" height=4 width=100%>',
                     },
                 },
 
@@ -282,9 +295,30 @@ OPERATION
     or
       LINK<#URL#optional link text#optional status text#>
 
-    Exact syntax is as follows:
+      LINK may also be specified with a CLASS designator for CSS
+      The default class is "B"
+
+      Alternate class designations may be specified for classes C thru Z
+      which you can then define in a CSS STYLE statement in the [page].head
+      portion of the give page.
+
+      Example:
+    A.C {
+      color: #6666FF;
+      background: transparent;
+      font-family: VERANDA,ARIAL,HELVETICA,SAN-SERIF;
+      font-weight: bold;
+      font-size: 16px;
+      text-decoration: underline;
+    }
+    A.C:hover {
+      color: #00CC00;
+    }
+
+    Exact syntax for LINK is as follows:
 
       uppercase word        "LINK"
+      optional CLASS        C through Z  (default is B)
       less than symbol      <
       delimiter (any char)  #
       page name or url text ./dir/file or http://....
@@ -356,7 +390,7 @@ COPYRIGHT AND LICENSE
     the text in the individual libraries to determine their specific
     licensing and copyright notice requirements.
 
-    Copyright 2006 - 2007, Michael Robinton <michael@bizsystems.com>
+    Copyright 2006 - 2010, Michael Robinton <michael@bizsystems.com>
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the

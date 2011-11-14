@@ -1,5 +1,18 @@
 Revision history for Perl extension Web::Scaffold
 
+0.15  Mon Nov 14 11:57:34 PST 2011
+	include example pages missing from 0.14 MANIFEST
+
+0.14  Fri Dec 10 15:35:50 PST 2010
+	add optional CLASS designator to LINK keyword
+
+0.13  Wed Dec  8 16:16:32 PST 2010
+	add provisions for "drop" shadow image
+	elements on the menu bar and trailer bar
+
+	add provisions for "top" shadow image
+	element on the trailer bar
+
 0.12  Mon Jun 22 13:24:36 PDT 2009
 	Correct sitemap header error
 

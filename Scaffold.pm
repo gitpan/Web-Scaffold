@@ -6,7 +6,7 @@ use POSIX;
 use Fcntl qw(:flock);
 use vars qw($VERSION);
 
-$VERSION = do { my @r = (q$Revision: 0.12 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
+$VERSION = do { my @r = (q$Revision: 0.15 $ =~ /\d+/g); sprintf "%d."."%02d" x $#r, @r };
 
 my @defaults = (
 
@@ -312,9 +312,12 @@ sub menugen {
   return ('&nbsp;','') unless
 	exists $pp->{$page} && exists $pp->{$page}->{menu} &&
 	(@selectbar = @{$pp->{$page}->{menu}});
-  my $linkCount = 1;
+   my $linkCount = 1;
+  my $menustripe = ( exists $pp->{$page}->{menustripe} )
+	? qq|  <tr align=top><td width=100%>$pp->{$page}->{menustripe}</td></tr>
+|	: '';
   my $div = '';
-  my $html = q|<div id="mh" class="mhs"><table cellspacing=0 cellpadding=2 border=0 width="|. $pw .q|">
+  my $html = q|<div id="mh" class="mhs"><table cellspacing=0 cellpadding=0 border=0 width="|. $pw .q|">
   <tr|;
   $html .= $#selectbar
 	? ' align=center>'
@@ -324,13 +327,13 @@ sub menugen {
   foreach(@selectbar) {
     my($name,$href,$click,$text,$status) = menuitem($pp,$_);
     if ($bar) {
-      $html .= q#<td class="S">|</td>#;
+      $html .= q#<td class="S">&nbsp;|&nbsp;</td>#;
     } else {
       $bar = 1;
     }
     my $class = ($name eq $page)
 	? 'CP' : 'NU';
-    $html .= qq|  <td><a class="$class" |;
+    $html .= qq|  <td NOWRAP><a class="$class" |;
     if (exists $pp->{$name} &&
 	exists $pp->{$name}->{submenu} &&
 	@{$pp->{$name}->{submenu}}) {	# build menu links
@@ -354,7 +357,8 @@ sub menugen {
 |;
     }
   }  
-  $html .= q|<td width=100%>&nbsp;</td></tr></table></div>
+  $html .= qq|<td width=100%>&nbsp;</td></tr></table>
+$menustripe</div>
 |;
   return($html,$div);
 }
@@ -373,34 +377,53 @@ sub trailgen {
   my @selectbar;
   return '&nbsp' unless exists $pp->{$page}->{trailer};
   my $html;
+  my $cols = 1;
   if (	exists $pp->{$page}->{trailer}->{links} &&
-	(@selectbar = @{$pp->{$page}->{trailer}->{links}})) {
-    $html = q|<div class="mhs"><table cellspacing=0 cellpadding=2 border=0 width="|. $specs->{pagewidth} .q|">
-  <tr align=center><td>&nbsp;</td>
+	($cols = @selectbar = @{$pp->{$page}->{trailer}->{links}})) {
+#    $html = q|<div class="mhs"><table cellspacing=0 cellpadding=0 border=0 width="|. $specs->{pagewidth} .q|">
+    $html = q|<div class="mhs"><table cellspacing=0 cellpadding=0 border=0 width="100%">
+|;
+    $cols *= 2;
+    $cols += 1 if exists $pp->{$page}->{trailer}->{text} && $pp->{$page}->{trailer}->{text};
+    if ( exists $pp->{$page}->{trailer}->{top} ) {
+      $html .= qq|<tr align=bottom><td colspan=$cols>$pp->{$page}->{trailer}->{top}</td></tr>
+|
+    }
+    $html .= q|<tr align=center><td>&nbsp;</td>
 |;
     my $bar = 0;
-    foreach(@selectbar) {
+    foreach (@selectbar) {
       my($name,$href,$click,$text,$status) = menuitem($pp,$_);
       if ($bar) {
-        $html .= q#<td class='S'>|</td>#;
+        $html .= q#<td class='S'>&nbsp;|&nbsp;</td>#;
       } else {
         $bar = 1;
       }
       my $class = $name eq $page ? 'CP' : 'NU';
-      $html .= qq|  <td><a class="$class" |;
+      $html .= qq|  <td NOWRAP><a class="$class" |;
       $html .= qq|href="$href" title="$status" onMouseover="return(oneOver('$status'));" onMouseout="return(linkOut());" $click>$text</a></td>
 |;
-    }
+   }
   }
+  my $ttop = ( exists $pp->{$page}->{trailer}->{top} )
+	? qq|<tr align=bottom><td colspan=$cols>$pp->{$page}->{trailer}->{top}</td></tr>
+|	: '';
+
   if (exists $pp->{$page}->{trailer}->{text} && $pp->{$page}->{trailer}->{text}) {
     if ($html) {
       $html .= q|<td class="NU" align=right width="100%">|;
     } else {
-      $html = q|<div class="mhs"><table cellspacing=0 cellpadding=2 border=0 width="100%">
+      $html = qq|<div class="mhs"><table cellspacing=0 cellpadding=0 border=0 width="100%">
+  $ttop
   <tr><td class="NU">|;
     }
     $html .= $pp->{$page}->{trailer}->{text} .q|&nbsp;</td>|;
   }
+  if ( $html && exists $pp->{$page}->{trailer}->{bottom} ) {
+    $html .= qq|</tr>
+<tr align=top><td colspan=$cols>$pp->{$page}->{trailer}->{bottom}</td>|;
+  }
+  return '&nbsp;' unless $html;
   return $html .q|</tr></table></div>
 |;
 }
@@ -428,10 +451,11 @@ sub parseLINK {
 #
 sub fixLINKs {
   my($pp,$html) = @_;
-  while ($html =~ m{LINK\<(.)([^>]+)>}) {
+  while ($html =~ m{LINK([C-Z]?)\<(.)([^>]+)>}) {
+    my $class = $1 || "B";
     my $match = quotemeta $&;
-    my($page,$link,$status) = parseLINK($1,$2);
-    my $replacement = q|<a class="B" title="|. $status .q|" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
+    my($page,$link,$status) = parseLINK($2,$3);
+    my $replacement = q|<a class="|. $class .q|" title="|. $status .q|" onMouseOver="self.status='|. $status . q|';return true;" onMouseOut="self.status='';return true;" |;
     if (exists $pp->{$page}) {
       $replacement .= q|onClick="return(npg('|. $page .q|'));" href="./">|;
     } else {
@@ -672,10 +696,11 @@ sub build {
 <font size=4 color=red>You must enable Javascript1.2 or better<br>to view
 all the features on this page</font>
 </noscript>
+
 <form id="silent" name="silent" action=index.shtml method=get>
 <input type=hidden name=page value="">
 </form>
-<table cellspacing=0 cellpadding=1 border=0 width="|. $specs->{pagewidth} .q|">
+<table cellspacing=0 cellpadding=0 border=0 width="|. $specs->{pagewidth} .q|">
 <tr><td>|;
 
   $tmp = fileLoad($pagedir . $page .'.top');
@@ -690,7 +715,7 @@ all the features on this page</font>
 	ref $pp->{$page}->{menu} eq 'ARRAY' &&
 	@{$pp->{$page}->{menu}} ) {
     (my $mnutxt,$divtxt) = menugen($pp,$page,$specs->{pagewidth},$debug);
-    $html .= q|<tr><td>|. $mnutxt . q|</td></tr>
+    $html .= $mnutxt . q|</td></tr>
 <tr><td>|;
   }
   if ($debug) {
@@ -703,10 +728,11 @@ all the features on this page</font>
 |;
   if (	exists $pp->{$page}->{trailer} &&
 	ref $pp->{$page}->{trailer} eq 'HASH' ) {
-    $html .= q|<tr><td>|. trailgen($specs,$pp,$page) . q|</td></tr>
-</table>
+    $html .= q|<tr align=bottom><td>|. trailgen($specs,$pp,$page) . q|</td></tr>
 |;
   }
+  $html .= q|</table>
+|;
   print $html;
 }
 
@@ -1339,6 +1365,11 @@ required page 'Home', they are as follows:
   # optional title text - if missing, 'heading' text will be used
 	    title	=> 'page title',
 
+  # optional table row immediately under menu. This allows a "drop"
+  # shadow to be added to the menu bar with a "1" pixel wide image, 'example'
+	    menustripe	=> '<img src="images/stripe1.gif" height=4 width=100%>',
+
+  # optional
 	    heading	=> 'Text under menu, over body text',
 
   # number of columns and column width in pixels
@@ -1356,6 +1387,14 @@ required page 'Home', they are as follows:
   # optional right hand side text. if there are no links then the
   # text will be placed on the left hand side of the trailer bar
 		text	=> 'Copyright 2006, yourname',
+
+  # optional table row immediately above trailer bar. this allows a "drop"
+  # shadow to be added to trailer bar with a "1" pixel wide image, 'example'
+		top	=> '<img src="images/stripe2.gif" height=4 width=100%>',
+
+  # optional table row immediately below trailer bar. This allows a "top" 
+  # shadow to be added to trailer bar with a "1" pixel wide image,  'example'
+		bottom	=> '<img src="images/stripe1.gif" height=4 width=100%>',
 	    },
 	},
 
@@ -1442,9 +1481,30 @@ a keyword and enclosing brackets.
 or
   LINK<#URL#optional link text#optional status text#>
 
-Exact syntax is as follows:
+  LINK may also be specified with a CLASS designator for CSS
+  The default class is "B"
+
+  Alternate class designations may be specified for classes C thru Z
+  which you can then define in a CSS STYLE statement in the [page].head
+  portion of the give page.
+
+  Example:
+A.C {
+  color: #6666FF;
+  background: transparent;
+  font-family: VERANDA,ARIAL,HELVETICA,SAN-SERIF;
+  font-weight: bold;
+  font-size: 16px;
+  text-decoration: underline;
+}
+A.C:hover {
+  color: #00CC00;
+}
+
+Exact syntax for LINK is as follows:
 
   uppercase word	"LINK"
+  optional CLASS	C through Z  (default is B)
   less than symbol	<
   delimiter (any char)	#
   page name or url text	./dir/file or http://....
@@ -1516,7 +1576,7 @@ have their own copyright notices and license requirements. Please read
 the text in the individual libraries to determine their specific licensing
 and copyright notice requirements.
 
-Copyright 2006 - 2009, Michael Robinton E<lt>michael@bizsystems.comE<gt>
+Copyright 2006 - 2010, Michael Robinton E<lt>michael@bizsystems.comE<gt>
  
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
